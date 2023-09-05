@@ -15,8 +15,9 @@
 
 import click
 
-from blueprint_maker.variants import create_variants
-from blueprint_maker.node_types import create_with_node_types
+from blueprint_maker.variants import command as variants
+from blueprint_maker.rename_nodes import command as rename_nodes
+from blueprint_maker.from_node_types import command as from_node_types
 
 CLICK_CONTEXT_SETTINGS = dict(
     help_option_names=['-h', '--help'])
@@ -32,8 +33,9 @@ def blueprint_maker():
 
 
 def _register_commands():
-    init.add_command(create_variants)
-    init.add_command(create_with_node_types)
+    init.add_command(variants.create_variants)
+    init.add_command(rename_nodes.create_by_renaming_nodes)
+    init.add_command(from_node_types.create_from_node_types)
 
 
 _register_commands()

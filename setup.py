@@ -43,6 +43,7 @@ setup(
     },
     install_requires=[
         'click>8,<9',
+        'wonderwords',
         'pyyaml==6.0',
     ]
 )

@@ -1,48 +1,16 @@
-import os
 import re
-import sys
 import json
 import yaml
 import urllib.request
-from pathlib import Path
 
 import click
+
 from blueprint_maker.logging import logger
+from blueprint_maker import utils as bm_utils
+from blueprint_maker.from_node_types.constants import (
+    BLUEPRINT_YAML_TEMPLATE
+)
 
-
-
-BLUEPRINT_YAML_TEMPLATE = {
-    'tosca_definitions_version': 'cloudify_dsl_1_5',
-    'imports': [
-        'cloudify/types/types.yaml',
-    ],
-    'inputs': {},
-    'node_templates': {}
-}
-
-CONCAT = 'concat'
-GET_SYS = 'get_sys'
-GET_INPUT = 'get_input'
-GET_SECRET = 'get_secret'
-GET_PROPERTY = 'get_property'
-GET_ATTRIBUTE = 'get_attribute'
-GET_CAPABILITY = 'get_capability'
-GET_ENVIRONMENT_CAPABILITY = 'get_environment_capability'
-INSTRINSIC_FUNCTIONS = [
-    CONCAT,
-    GET_SYS,
-    GET_INPUT,
-    GET_SECRET,
-    GET_PROPERTY,
-    GET_ATTRIBUTE,
-    GET_CAPABILITY,
-    GET_ENVIRONMENT_CAPABILITY
-]
-
-class CloudifySafeDumper(yaml.SafeDumper):
-
-    def increase_indent(self, flow=False, indentless=False):
-        return super(CloudifySafeDumper, self).increase_indent(flow, False)
 
 
 @click.command(name='from-node-types',
@@ -56,22 +24,19 @@ class CloudifySafeDumper(yaml.SafeDumper):
               type=click.STRING,
               multiple=True,
               help='A node type to use in the blueprint.')
-def create_with_node_types(*args, **kwargs):
-    blueprint = kwargs.get('blueprint')
-    # +1 because we are skipping the first which is a duplicate.
-    node_types = kwargs.get('node_type', [])
-    if blueprint:
-        blueprint = Path(blueprint).resolve()
-    else:
-        logger.error('A blueprint must be provided.')
-        sys.exit(1)
-    if os.path.exists(blueprint):
-        logger.error('Blueprint path already exists: {}'.format(blueprint))
-        sys.exit(1)
-
+def create_from_node_types(*args, **kwargs):
+    node_types = bm_utils.get_kwarg(kwargs, 'node_type', [])
+    blueprint = bm_utils.get_new_file(kwargs, 'blueprint')
     previous_node_name = None
     for item in node_types:
         node_type_def = get(item)['items'][0]
+        previous_node_name = generate_node_template_from_type(
+            previous_node_name, node_type_def)
+    bm_utils.create_new_cloudify_yaml(BLUEPRINT_YAML_TEMPLATE, blueprint)
+    logger.info('Wrote new blueprint to {}'.format(blueprint))
+
+
+def generate_node_template_from_type(previous_node_name, node_type_def):
         plugin_import = 'plugin:{}'.format(node_type_def['plugin_name'])
         if plugin_import not in BLUEPRINT_YAML_TEMPLATE['imports']:
             BLUEPRINT_YAML_TEMPLATE['imports'].append(plugin_import)
@@ -95,34 +60,7 @@ def create_with_node_types(*args, **kwargs):
                 }
             ]
         BLUEPRINT_YAML_TEMPLATE['node_templates'].update(node_template)
-        previous_node_name = node_name
-    yaml_obj = yaml.dump(
-        BLUEPRINT_YAML_TEMPLATE,
-        Dumper=CloudifySafeDumper,
-        default_flow_style=False,
-        sort_keys=False,
-        width=float('inf')
-    )
-
-
-    lines = yaml_obj.split('\n')            
-    for line_no in range(0, len(lines)):
-        for fn in INSTRINSIC_FUNCTIONS:
-            if fn in lines[line_no]:
-                lines[line_no] = lines[line_no].replace("'", '')
-                break
-    new_yaml = ''
-    for line in lines:
-        if line in ['imports:', 'inputs:', 'node_templates:']:
-            new_yaml += '\n'
-            new_yaml += '{}\n'.format(line)
-            new_yaml += '\n'
-        else:
-            new_yaml += '{}\n'.format(line)
-
-    with open(blueprint, 'w') as outfile:
-        outfile.write(new_yaml)
-    logger.info('Wrote new blueprint to {}'.format(blueprint))
+        return node_name
 
 
 def fill_node_template(node_name, node_type, properties):
