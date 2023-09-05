@@ -38,6 +38,7 @@ setup(
     entry_points={
         "console_scripts": [
             "blueprint-maker = blueprint_maker.main:init",
+            "bm = blueprint_maker.main:init",
         ]
     },
     install_requires=[

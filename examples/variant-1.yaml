@@ -1,0 +1,15 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+imports:
+  - cloudify/types/types.yaml
+
+node_templates:
+
+  a:
+    type: cloudify.nodes.Root
+
+  c:
+    type: cloudify.nodes.Root
+
+  b:
+    type: cloudify.nodes.Root

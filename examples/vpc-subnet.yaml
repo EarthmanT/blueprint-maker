@@ -1,0 +1,52 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+imports:
+
+  - cloudify/types/types.yaml
+  - plugin:cloudify-aws-plugin
+
+inputs:
+
+  vpc_resource_config_cidrblock:
+    display_label: Vpc Resource Config Cidrblock
+    type: string
+  vpc_resource_config_kwargs:
+    display_label: Vpc Resource Config Kwargs
+    type: string
+  subnet_resource_config_availabilityzone:
+    display_label: Subnet Resource Config Availabilityzone
+    type: string
+  subnet_resource_config_cidrblock:
+    display_label: Subnet Resource Config Cidrblock
+    type: string
+  subnet_resource_config_vpcid:
+    display_label: Subnet Resource Config Vpcid
+    type: string
+  subnet_resource_config_kwargs:
+    display_label: Subnet Resource Config Kwargs
+    type: string
+  subnet_use_available_zones:
+    display_label: Subnet Use Available Zones
+    type: boolean
+
+node_templates:
+
+  vpc:
+    type: cloudify.nodes.aws.ec2.Vpc
+    properties:
+      resource_config:
+        CidrBlock: { get_input : vpc_resource_config_cidrblock }
+        kwargs: { get_input : vpc_resource_config_kwargs }
+  subnet:
+    type: cloudify.nodes.aws.ec2.Subnet
+    properties:
+      resource_config:
+        AvailabilityZone: { get_input : subnet_resource_config_availabilityzone }
+        CidrBlock: { get_input : subnet_resource_config_cidrblock }
+        VpcId: { get_input : subnet_resource_config_vpcid }
+        kwargs: { get_input : subnet_resource_config_kwargs }
+      use_available_zones: { get_input : subnet_use_available_zones }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: vpc
+

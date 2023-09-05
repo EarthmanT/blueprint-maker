@@ -58,37 +58,37 @@ def put_permutations(blueprint, blueprint_content, node_templates_section, permu
         put_blueprint_content(new_name, new_blueprint_content)
 
 
-@click.command(name='create-variants',
+@click.command(name='variants',
                short_help='Create variants of a blueprint.')
 @click.option('-b',
               '--blueprint',
               type=click.STRING,
               help='The path to blueprint YAML file.')
-@click.option('-t',
-              '--total-variants',
+@click.option('-m',
+              '--max-variants',
               type=click.INT,
-              help='The number of variants to generate.')
+              help='The max number of variants to generate.')
 def create_variants(*args, **kwargs):
     blueprint = kwargs.get('blueprint')
     # +1 because we are skipping the first which is a duplicate.
-    total_variants = kwargs.get('total_variants', 5) + 1
+    max_variants = kwargs.get('max_variants', 5) + 1
     if blueprint:
         blueprint = Path(blueprint).resolve()
-    if not os.path.exists(blueprint):
+    if not blueprint or not os.path.exists(blueprint):
         logger.error('Incorrect blueprint path: {}'.format(blueprint))
         sys.exit(1)
     blueprint_content = get_blueprint_content(blueprint)
     node_templates_section = get_node_templates_section(blueprint_content)
     node_templates = get_node_templates(node_templates_section)
-    permutations = get_permutations(node_templates, total_variants)
+    permutations = get_permutations(node_templates, max_variants)
     logger.info('Generating {} variations of {}'.format(
         len(permutations) - 1, blueprint))
-    if (total_variants - 1) - (len(permutations) - 1) > 0:
+    if (max_variants - 1) - (len(permutations) - 1) > 0:
         logger.error(
             '{} variants were requested but {} were generated. '
             'This is the max number of permutations possible for '
             'the given node templates section.'.format(
-                total_variants - 1,
+                max_variants - 1,
                 len(permutations) - 1
             )
         )
