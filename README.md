@@ -148,9 +148,11 @@ capabilities:
   cap3:
     value: { get_input: baz }
 ```
+
 Result:
+
 ```yaml
-# examples/rename-viewer.yaml
+# examples/rename-aloof.yaml
 tosca_definitions_version: cloudify_dsl_1_5
 
 imports:
@@ -159,27 +161,30 @@ imports:
 
 inputs:
 
-  baz:
+  foo:
     type: string
 
 node_templates:
 
-  yarn:
+  lighting:
     type: cloudify.nodes.Root
-  elevation:
-    type: cloudify.nodes.Root
-  pound:
-    type: cloudify.nodes.Roo
     relationships:
       - type: cloudify.relationships.connected_to
-        target: elevation
+        target: jog
+  jog:
+    type: cloudify.nodes.Root
+  narrative:
+    type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: jog
+      - type: cloudify.relationships.connected_to
+        target: lighting
 capabilities:
   cap1:
-    value: {get_attribute: [pound, quxx]}
+    value: {get_attribute: [narrative, quxx]}
   cap2:
-    value: {get_property: [yarn, qux]}
+    value: {get_property: [lighting, qux]}
   cap3:
-    value: {get_input: baz}
-
-
+    value: {get_input: foo}
 ```

@@ -1,4 +1,5 @@
 import sys
+import json
 
 import click
 from wonderwords import RandomWord
@@ -48,13 +49,19 @@ def get_sorted_node_template_names(blueprint_yaml):
     return sorted(node_templates.keys())
 
 def recurse_data(data, old, new):
-    # if isinstance(data, str) and data == old:
-    #     return new
+    if isinstance(data, str):
+            try:
+                data = json.loads(data.replace("'", '"'))
+            except json.JSONDecodeError:
+                pass
+            else:
+                if GET_ATTRIBUTE in data or GET_PROPERTY in data:
+                    data = recurse_data(data, old, new)
     if isinstance(data, list):
         for n in range(0, len(data)):
             data[n] = recurse_data(data[n], old, new)
     elif isinstance(data, dict):
-        for k, v in data.items():
+        for k, v in list(data.items()):
             if k in INSTRINSIC_FUNCTIONS:
                 if k in NODE_TEMPLATE_FNS:
                     if not isinstance(v, list) or len(v) < 2:
@@ -63,8 +70,6 @@ def recurse_data(data, old, new):
                             'which is not a valid arg.'.format(k, v))
                         sys.exit(1)
                     elif v[0] == old:
-                        logger.info('Replacing instance of {} with {}'.format(
-                            v[0], new))
                         v[0] = new
                         data[k] = v
                 data = str(data)
@@ -72,7 +77,7 @@ def recurse_data(data, old, new):
                 for n in range(0, len(v)):
                     if v[n]['target'] == old:
                         v[n]['target'] = new
-                data[k] = v
+                data[k] = recurse_data(v, old, new)
             else:
                 data[k] = recurse_data(v, old, new)
     return data

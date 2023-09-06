@@ -12,13 +12,18 @@ inputs:
 node_templates:
 
   foo:
-    type: cloudify.nodes.Roo
+    type: cloudify.nodes.Root
     relationships:
       - type: cloudify.relationships.connected_to
         target: baz
+      - type: cloudify.relationships.connected_to
+        target: bar
 
   bar:
     type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: baz
 
   baz:
     type: cloudify.nodes.Root
