@@ -18,6 +18,7 @@ def create_variants(*args, **kwargs):
     # +1 because we are skipping the first which is a duplicate.
     max_variants = bm_utils.get_kwarg(kwargs, 'max_variants', 5) + 1
     blueprint = bm_utils.get_existing_file(kwargs, 'blueprint')
+    bm_utils.remove_anchors(blueprint)
     blueprint_content = bm_utils.get_file_content(blueprint)
     node_templates_section = v_utils.get_node_templates_section(blueprint_content)
     node_templates = v_utils.get_node_templates(node_templates_section)
