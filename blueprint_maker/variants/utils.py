@@ -9,12 +9,18 @@ import click
 from blueprint_maker.logging import logger
 from blueprint_maker import utils as bm_utils
 
-NT_REGEX = '(\nnode_templates:\n\s+|\n\ncapabilities:|\n\noutputs:|\n\npolicies:|\n\ngroups:|$)'
+NT_REGEX = '(\nnode_templates:\n\n\s+(?=(\ncapabilities:\n|\noutputs:\n|\npolicies:\n|\ngroups:\n|$)))'
 SEP_REGEX = '\n\n\s+'
 
 
 def get_node_templates_section(blueprint_content):
-    return re.split(NT_REGEX, blueprint_content)[2:-2][0]
+    after_nt = blueprint_content.split('node_templates:\n')[1]
+    if after_nt:
+        before_end = re.split(r'(\noutputs:\n|\ncapabilities:\n|$)', after_nt)
+        if before_end:
+            if not before_end[0].startswith('  '):
+                return '  ' + before_end[0]
+            return before_end[0]
 
 
 def get_node_templates(node_templates_section):
@@ -35,9 +41,9 @@ def get_permutations(node_templates, max_permutations=10):
 
 
 def put_permutations(blueprint,
-                     blueprint_content,
-                     node_templates_section,
-                     permutations):
+                    blueprint_content,
+                    node_templates_section,
+                    permutations):
 
     for n in range(0, len(permutations)):
         if n == 0:
