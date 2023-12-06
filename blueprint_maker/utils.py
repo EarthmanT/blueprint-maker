@@ -23,11 +23,22 @@ class CloudifySafeDumper(yaml.SafeDumper):
         return True
 
 
+def represent_intrinsic_function_args(args):
+    if isinstance(args, list):
+        new_list = []
+        for item in args:
+            if isinstance(item, str):
+                item = f"'{item}'"
+            new_list.append(item)
+        args = new_list
+    return args
+
+
 def represent_intrinsic_functions(dumper, data):
     for fn in INSTRINSIC_FUNCTIONS:
         if fn in data:
             return dumper.org_represent_str(
-                '{{ {fn}: {val} }}'.format(fn=fn, val=data[fn]))
+                '{{ {fn}: {val} }}'.format(fn=fn, val=(represent_intrinsic_function_args(data[fn]))))
     return dumper.represent_dict(data)
 
 
@@ -35,7 +46,10 @@ def repr_str(dumper, data):
     if '\n' in data:
         return dumper.represent_scalar(
             u'tag:yaml.org,2002:str', data, style='>')
+    # elif any(not c.isalnum() for c in data):
+    #     return dumper.represent_scalar('tag:yaml.org,2002:str', data, style="'")
     return dumper.org_represent_str(data)
+
 
 yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
 yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
@@ -78,6 +92,14 @@ def remove_anchors(blueprint):
     create_new_cloudify_yaml(python_dict, blueprint)
 
 
+def dos2unix(string):
+    string = string.replace(r'\r', r'\n')
+    string = string.encode()
+    string = string.replace(b'\r\n', b'\n')
+    return string
+
+
+
 def create_new_cloudify_yaml(python_dict, blueprint):
     yaml_obj = yaml.dump(
         python_dict,
@@ -103,9 +125,8 @@ def create_new_cloudify_yaml(python_dict, blueprint):
             new_yaml += '{}\n'.format(line)
         else:
             new_yaml += '{}\n'.format(line)
-
-    with open(blueprint, 'w') as outfile:
-        outfile.write(new_yaml)
+    with open(blueprint, 'wb') as outfile:
+        outfile.write(dos2unix(new_yaml))
 
 
 def get_yaml(filepath):
@@ -120,6 +141,10 @@ def get_file_content(filepath):
 
 
 def put_file_content(filepath, content):
-    with open(filepath, 'w') as outfile:
-        outfile.write(content)
-
+    filename, extension = os.path.splitext(filepath)
+    counter = 1
+    while os.path.exists(filepath):
+        filepath = filename + '-' + str(counter) + extension
+        counter += 1
+    with open(filepath, 'wb') as outfile:
+        outfile.write(dos2unix(content))

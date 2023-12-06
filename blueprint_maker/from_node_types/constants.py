@@ -14,6 +14,7 @@ GET_SECRET = 'get_secret'
 GET_PROPERTY = 'get_property'
 GET_ATTRIBUTE = 'get_attribute'
 GET_CAPABILITY = 'get_capability'
+GET_ATTRIBUTE_LIST = 'get_attribute_list'
 GET_ENVIRONMENT_CAPABILITY = 'get_environment_capability'
 INSTRINSIC_FUNCTIONS = [
     CONCAT,
@@ -23,5 +24,6 @@ INSTRINSIC_FUNCTIONS = [
     GET_PROPERTY,
     GET_ATTRIBUTE,
     GET_CAPABILITY,
+    GET_ATTRIBUTE_LIST,
     GET_ENVIRONMENT_CAPABILITY
 ]
